@@ -113,11 +113,74 @@ xychart-beta
     line [899.3, 896.3, 891.1, 887.8, 886.3, 885.8]
     line [899.3, 896.3, 891.1, 887.0, 884.7, 883.6]
 ```
+
+## Archive Size vs Dictionary Size
+
+How archive size changes with dictionary at fixed block sizes:
+
+> Lines in order: block=256K (top, flat) → block=4M (middle) → block=Solid (bottom)
+
+```mermaid
+xychart-beta
+    title "Archive Size (MB) vs Dictionary Size"
+    x-axis ["d=64K", "d=1M", "d=16M"]
+    y-axis "Archive Size (MB)" 882 --> 902
+    line [900.5, 899.3, 899.3]
+    line [899.7, 887.8, 887.0]
+    line [899.6, 885.8, 883.6]
+```
+
+| Dict | block=256K | block=4M | block=Solid |
+|------|----------:|---------:|-----------:|
+| 64K | 900.5 MB | 899.7 MB | 899.6 MB |
+| 1M | 899.3 MB | 887.8 MB | 885.8 MB |
+| 16M | 899.3 MB | 887.0 MB | 883.6 MB |
+
+> **At small blocks (256K)**: dictionary is irrelevant — all three are ~900 MB.
+> **At large blocks / solid**: bigger dictionary helps, but only d=64K→1M matters (1.5%). Going d=1M→16M saves just 0.2%.
+
+## Extraction Latency vs Dictionary Size
+
+How extraction latency changes with dictionary at fixed block sizes:
+
+> Lines in order: block=256K (bottom, flat) → block=4M (middle) → block=Solid (top, exponential)
+
+```mermaid
+xychart-beta
+    title "Extraction p50 (ms) vs Dictionary Size — small blocks"
+    x-axis ["d=64K", "d=1M", "d=16M"]
+    y-axis "Latency (ms)" 0 --> 120
+    line [3.4, 4.9, 4.9]
+    line [23.9, 27.1, 24.8]
+    line [95.3, 106.8, 104.5]
+```
+
+| Dict | block=256K | block=1M | block=4M |
+|------|----------:|---------:|---------:|
+| 64K | 3.4 ms | 23.9 ms | 95.3 ms |
+| 1M | 4.9 ms | 27.1 ms | 106.8 ms |
+| 16M | 4.9 ms | 24.8 ms | 104.5 ms |
+
+> **Flat lines** — dictionary has virtually no effect on extraction when blocks are small.
+
+For solid archives, the picture is dramatically different:
+
+```mermaid
+xychart-beta
+    title "Extraction p50 (ms) vs Dictionary Size — Solid archive"
+    x-axis ["d=64K", "d=1M", "d=16M"]
+    y-axis "Latency (ms)" 0 --> 28000
+    bar [1647, 7109, 26898]
+```
+
+> **Exponential growth**: d=64K→16M makes solid extraction **16.3× slower** (1.6s → 26.9s).
+
 ### Key Takeaways
 
 - **Solid block size** is the primary control for random access speed.
   Smaller blocks = faster single-file extraction, but worse compression.
-- **Dictionary size** primarily affects compression ratio.
-  Diminishing returns above 4-16MB for typical filesets.
+- **Dictionary size** primarily affects compression ratio at large block sizes.
+  At small blocks it has no effect on either size or speed.
+- Diminishing returns above d=1M for typical filesets.
 - For archives you'll extract individual files from, prioritize block size.
 - For backup/archival with full extraction only, use solid for best ratio.
