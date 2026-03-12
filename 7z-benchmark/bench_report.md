@@ -114,56 +114,54 @@ xychart-beta
     line [899.3, 896.3, 891.1, 887.0, 884.7, 883.6]
 ```
 
-## Archive Size vs Dictionary Size
+## Archive Size vs Dictionary Size (block=1M, apples-to-apples)
 
-How archive size changes with dictionary at fixed block sizes:
-
-> Lines in order: block=256K (top, flat) → block=4M (middle) → block=Solid (bottom)
+Same 420 files (200 `.md` + 220 `.jpg`, 6.38 MB), all compressed with block=1M, varying only dictionary size:
 
 ```mermaid
 xychart-beta
-    title "Archive Size (MB) vs Dictionary Size"
-    x-axis ["d=64K", "d=1M", "d=16M"]
-    y-axis "Archive Size (MB)" 882 --> 902
-    line [900.5, 899.3, 899.3]
-    line [899.7, 887.8, 887.0]
-    line [899.6, 885.8, 883.6]
+    title "Archive Size (MB) vs Dictionary Size — fixed block=1M"
+    x-axis ["d=64K", "d=256K", "d=1M", "d=4M", "d=16M", "d=64M"]
+    y-axis "Archive Size (MB)" 5.6 --> 6.2
+    bar [6.04, 5.81, 5.71, 5.71, 5.71, 5.71]
 ```
 
-| Dict | block=256K | block=4M | block=Solid |
-|------|----------:|---------:|-----------:|
-| 64K | 900.5 MB | 899.7 MB | 899.6 MB |
-| 1M | 899.3 MB | 887.8 MB | 885.8 MB |
-| 16M | 899.3 MB | 887.0 MB | 883.6 MB |
+| Dict | Archive Size | Ratio | Delta vs d=64K |
+|------|-------------|-------|:--------------:|
+| 64K | 6.04 MB | 94.7% | baseline |
+| 256K | 5.81 MB | 91.1% | -3.8% |
+| 1M | 5.71 MB | 89.5% | -5.5% |
+| 4M | 5.71 MB | 89.5% | -5.5% |
+| 16M | 5.71 MB | 89.5% | -5.5% |
+| 64M | 5.71 MB | 89.5% | -5.5% |
 
-> **At small blocks (256K)**: dictionary is irrelevant — all three are ~900 MB.
-> **At large blocks / solid**: bigger dictionary helps, but only d=64K→1M matters (1.5%). Going d=1M→16M saves just 0.2%.
+> **Dictionary saturates at d=1M** — increasing beyond 1M produces identical archives because 1M blocks can't exploit longer-range matches anyway. The dictionary window is limited by block size.
+>
+> The 5.5% improvement from d=64K→1M comes from better text compression (`.md` files). JPEGs are stored verbatim regardless.
 
-## Extraction Latency vs Dictionary Size
+## Extraction Latency vs Dictionary Size (block=1M)
 
-How extraction latency changes with dictionary at fixed block sizes:
-
-> Lines in order: block=256K (bottom, flat) → block=4M (middle) → block=Solid (top, exponential)
+From the large-scale benchmark (900 MB dataset, 20 cold extractions each):
 
 ```mermaid
 xychart-beta
-    title "Extraction p50 (ms) vs Dictionary Size — small blocks"
+    title "Extraction p50 (ms) vs Dictionary Size — fixed block=1M"
     x-axis ["d=64K", "d=1M", "d=16M"]
-    y-axis "Latency (ms)" 0 --> 120
-    line [3.4, 4.9, 4.9]
-    line [23.9, 27.1, 24.8]
-    line [95.3, 106.8, 104.5]
+    y-axis "Latency (ms)" 0 --> 30
+    bar [23.9, 27.1, 24.8]
 ```
 
-| Dict | block=256K | block=1M | block=4M |
-|------|----------:|---------:|---------:|
-| 64K | 3.4 ms | 23.9 ms | 95.3 ms |
-| 1M | 4.9 ms | 27.1 ms | 106.8 ms |
-| 16M | 4.9 ms | 24.8 ms | 104.5 ms |
+| Dict | p50 (ms) | Max (ms) |
+|------|--------:|---------:|
+| 64K | 23.9 | 33.4 |
+| 1M | 27.1 | 48.1 |
+| 16M | 24.8 | 34.1 |
 
-> **Flat lines** — dictionary has virtually no effect on extraction when blocks are small.
+> **Flat** — dictionary size has essentially **zero effect** on extraction speed at block=1M. All three are within measurement noise (~24 ms).
+>
+> This confirms: at small block sizes, you should pick dictionary for best compression (d=1M) without worrying about extraction speed.
 
-For solid archives, the picture is dramatically different:
+For solid archives, the picture is catastrophically different:
 
 ```mermaid
 xychart-beta
