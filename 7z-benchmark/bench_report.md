@@ -84,36 +84,32 @@ Cold extraction of a random file (folder cache invalidated).
 
 ```mermaid
 xychart-beta
-    title "Random file extraction p50 (ms, log-ish, lower=better)"
-    x-axis ["16k", "64k", "128k", "256k", "512k", "1m", "4m", "16m", "32m", "on"]
-    y-axis "Milliseconds" 0 --> 29588
-    line [0.0, 0.0, 0.0, 3.4, 10.6, 23.9, 95.3, 403.5, 797.8, 1647.1]
-    line [0.1, 0.3, 1.3, 4.9, 12.7, 27.1, 106.8, 438.8, 873.8, 7108.5]
-    line [0.1, 0.3, 1.3, 4.9, 12.4, 24.8, 104.5, 451.0, 0.0, 26897.8]
+    title "Random file extraction p50 (ms) — d=1m (all block sizes)"
+    x-axis ["16K", "64K", "128K", "256K", "512K", "1M", "4M", "16M", "32M"]
+    y-axis "Milliseconds" 0 --> 1000
+    bar [0.1, 0.3, 1.3, 4.9, 12.7, 27.1, 106.8, 438.8, 873.8]
 ```
 
 ## Block Decompression Time vs Block Size
 
 ```mermaid
 xychart-beta
-    title "Single block decompression (ms, lower=better)"
-    x-axis ["16k", "64k", "128k", "256k", "512k", "1m", "4m", "16m", "32m", "on"]
-    y-axis "Milliseconds" 0 --> 29509
-    bar [0.0, 0.0, 0.0, 3.9, 9.0, 22.9, 97.4, 384.5, 847.9, 1693.1]
-    bar [0.6, 0.6, 2.5, 3.8, 9.7, 24.5, 109.0, 412.9, 872.5, 7250.6]
-    bar [0.5, 0.5, 2.6, 4.0, 9.4, 24.0, 107.8, 428.1, 0.0, 26826.3]
+    title "Single block decompression (ms) — d=1m"
+    x-axis ["16K", "64K", "128K", "256K", "512K", "1M", "4M", "16M", "32M"]
+    y-axis "Milliseconds" 0 --> 900
+    bar [0.6, 0.6, 2.5, 3.8, 9.7, 24.5, 109.0, 412.9, 872.5]
 ```
 
 ## Compression Ratio vs Block Size
 
 ```mermaid
 xychart-beta
-    title "Archive ratio (%, smaller=better)"
-    x-axis ["16k", "64k", "128k", "256k", "512k", "1m", "4m", "16m", "32m", "on"]
-    y-axis "Ratio (%)" 60 --> 70
-    line [0.0, 0.0, 0.0, inf, inf, inf, inf, inf, inf, inf]
-    line [inf, inf, inf, inf, inf, inf, inf, inf, inf, inf]
-    line [inf, inf, inf, inf, inf, inf, inf, inf, 0.0, inf]
+    title "Archive Size (MB) by Dictionary Size"
+    x-axis ["256K", "512K", "1M", "4M", "16M", "Solid"]
+    y-axis "Archive Size (MB)" 880 --> 905
+    line [900.5, 900.1, 899.9, 899.7, 899.6, 899.6]
+    line [899.3, 896.3, 891.1, 887.8, 886.3, 885.8]
+    line [899.3, 896.3, 891.1, 887.0, 884.7, 883.6]
 ```
 ### Key Takeaways
 

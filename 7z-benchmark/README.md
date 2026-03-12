@@ -92,7 +92,46 @@ xychart-beta
 | 16M | 58 | 451.0 | 490.6 | 884.7 MB | ❌ Slow |
 | Solid | 1 | **26,898** | 27,131 | 883.6 MB | 🔴 Unusable |
 
-### Dictionary Size Comparison (same block sizes)
+### Archive Size vs Dictionary Size
+
+At a fixed block size, larger dictionaries improve compression — but only when blocks are large enough to benefit:
+
+```mermaid
+xychart-beta
+    title "Archive Size (MB) by Dictionary Size — fixed block sizes"
+    x-axis ["d=64K", "d=1M", "d=16M"]
+    y-axis "Archive Size (MB)" 880 --> 905
+    bar [900.5, 899.3, 899.3]
+    bar [899.7, 887.8, 887.0]
+    bar [899.6, 885.8, 883.6]
+```
+
+| Dict | Block=256K | Block=4M | Block=Solid |
+|------|----------:|---------:|-----------:|
+| 64K | 900.5 MB | 899.7 MB | 899.6 MB |
+| 1M | 899.3 MB | 887.8 MB | 885.8 MB |
+| 16M | 899.3 MB | 887.0 MB | 883.6 MB |
+
+> At small blocks (256K), dictionary size makes **no difference** — blocks are too small for larger dictionaries to find longer matches. At 4M+ blocks, d=1M vs d=16M saves only 0.1%.
+
+### Extraction Latency vs Dictionary Size
+
+```mermaid
+xychart-beta
+    title "Extraction p50 (ms) by Dictionary Size — fixed block sizes"
+    x-axis ["d=64K", "d=1M", "d=16M"]
+    y-axis "Latency (ms)" 0 --> 30
+    bar [3.4, 4.9, 4.9]
+    bar [23.9, 27.1, 24.8]
+```
+
+| Dict | Block=256K | Block=1M | Block=4M | Block=Solid |
+|------|----------:|---------:|---------:|-----------:|
+| 64K | 3.4 ms | 23.9 ms | 95.3 ms | 1,647 ms |
+| 1M | 4.9 ms | 27.1 ms | 106.8 ms | 7,109 ms |
+| 16M | 4.9 ms | 24.8 ms | 104.5 ms | **26,898 ms** |
+
+> At small block sizes, dictionary has **negligible effect** on extraction speed (~1ms difference). But for solid archives, larger dictionaries are **catastrophic**: d=16m is **16.3× slower** than d=64k because the entire archive becomes one decompression unit with a massive dictionary window.
 
 ```mermaid
 xychart-beta
@@ -101,14 +140,6 @@ xychart-beta
     y-axis "Latency (ms)" 0 --> 28000
     bar [1647, 7109, 26898]
 ```
-
-| Dict | Block=256K | Block=1M | Block=Solid |
-|------|----------:|--------:|-----------:|
-| 64K | 3.4 ms | 23.9 ms | 1,647 ms |
-| 1M | 4.9 ms | 27.1 ms | 7,109 ms |
-| 16M | 4.9 ms | 24.8 ms | **26,898 ms** |
-
-> At small block sizes, dictionary doesn't matter. At solid, larger dictionaries are **catastrophically slower** because the entire archive is one decompression unit.
 
 ---
 
