@@ -96,9 +96,11 @@ xychart-beta
 
 At a fixed block size, larger dictionaries improve compression — but only when blocks are large enough to benefit:
 
+> Bars in order: block=256K → block=4M → block=Solid
+
 ```mermaid
 xychart-beta
-    title "Archive Size (MB) by Dictionary Size — fixed block sizes"
+    title "Archive Size (MB) vs Dictionary Size"
     x-axis ["d=64K", "d=1M", "d=16M"]
     y-axis "Archive Size (MB)" 880 --> 905
     bar [900.5, 899.3, 899.3]
@@ -116,9 +118,11 @@ xychart-beta
 
 ### Extraction Latency vs Dictionary Size
 
+> Bars in order: block=256K → block=1M
+
 ```mermaid
 xychart-beta
-    title "Extraction p50 (ms) by Dictionary Size — fixed block sizes"
+    title "Extraction p50 (ms) vs Dictionary Size"
     x-axis ["d=64K", "d=1M", "d=16M"]
     y-axis "Latency (ms)" 0 --> 30
     bar [3.4, 4.9, 4.9]

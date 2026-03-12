@@ -100,11 +100,13 @@ xychart-beta
     bar [0.6, 0.6, 2.5, 3.8, 9.7, 24.5, 109.0, 412.9, 872.5]
 ```
 
-## Compression Ratio vs Block Size
+## Archive Size vs Block Size (by dictionary)
+
+> Lines in order: d=64K (top, flat) → d=1M (middle) → d=16M (bottom, steepest)
 
 ```mermaid
 xychart-beta
-    title "Archive Size (MB) by Dictionary Size"
+    title "Archive Size (MB) vs Block Size"
     x-axis ["256K", "512K", "1M", "4M", "16M", "Solid"]
     y-axis "Archive Size (MB)" 880 --> 905
     line [900.5, 900.1, 899.9, 899.7, 899.6, 899.6]
