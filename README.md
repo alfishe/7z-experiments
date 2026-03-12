@@ -95,6 +95,42 @@ Dictionary size affects compression CPU time but has negligible effect on extrac
 
 At small block sizes, dictionary doesn't matter. At solid, larger dictionaries make things catastrophically worse because the entire archive is one block.
 
+### Recompression Experiment: Same Files, Different Block Sizes
+
+To isolate the compression-vs-speed trade-off, we extracted 420 files (200 `.md` + 220 `.jpg`, 6.38 MB uncompressed) and recompressed them with five configurations:
+
+| Configuration | Command | Archive Size | Ratio | Blocks | Overhead vs Solid |
+|---------------|---------|-------------|-------|-------:|:-----------------:|
+| Non-solid (1/file) | `-ms=off` | 6.17 MB | 96.7% | 420 | +8.9% |
+| Small blocks (128K) | `-ms=128k` | 6.06 MB | 94.9% | 61 | +7.0% |
+| Medium blocks (4M) | `-ms=4m` | 5.67 MB | 88.8% | 2 | +0.1% |
+| Solid (d=1m) | `-ms=on -d=1m` | 5.67 MB | 88.8% | 1 | baseline |
+| Solid (d=16m) | `-ms=on -d=16m` | **5.66 MB** | **88.6%** | 1 | -0.2% |
+
+#### Side-by-Side: Compression vs Extraction Speed
+
+Combining the recompression data with benchmark extraction latencies:
+
+| Configuration | Size | Ratio | Extra Space | p50 Extraction | Speed Rating |
+|---------------|-----:|------:|:-----------:|---------------:|:------------:|
+| Non-solid (1/file) | 6.17 MB | 96.7% | +8.9% | **< 0.1 ms** | ⚡ Instant |
+| Small blocks (128K) | 6.06 MB | 94.9% | +7.0% | **1.3 ms** | ⚡ Instant |
+| Medium blocks (4M) | 5.67 MB | 88.8% | +0.1% | **105 ms** | ⚠️ Noticeable |
+| Solid (d=1m) | 5.67 MB | 88.8% | — | **7,109 ms** | 🔴 Unusable |
+| Solid (d=16m) | 5.66 MB | 88.6% | saves 0.2% | **26,898 ms** | 🔴 Unusable |
+
+```mermaid
+xychart-beta
+    title "Archive Size vs Extraction Latency (same 420 files)"
+    x-axis ["Non-solid", "128K blocks", "4M blocks", "Solid d=1m", "Solid d=16m"]
+    y-axis "Archive Size (MB)" 5.5 --> 6.3
+    bar [6.17, 6.06, 5.67, 5.67, 5.66]
+```
+
+> **The punchline**: going from solid to non-solid costs only 8.9% more space but makes extraction **269,000× faster**. With 4M blocks the overhead drops to just 0.1% — virtually free — while extraction is still 68× faster than solid.
+>
+> **Why is the ratio so poor across all configs?** The dataset is 52% JPEG images by count. JPEGs are already DCT-compressed — LZMA2 stores them verbatim at ~100% ratio regardless of block size. The only compressible data is the `.md` text files, which make up a small fraction of total bytes. For text-heavy archives, expect much larger differences between solid and non-solid.
+
 ---
 
 ## The Recipe Archive Case Study
