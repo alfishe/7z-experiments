@@ -173,12 +173,95 @@ xychart-beta
 
 > **Exponential growth**: d=64K→16M makes solid extraction **16.3× slower** (1.6s → 26.9s).
 
+---
+
+## Full Block × Dictionary Matrix
+
+420 files (200 `.md` + 220 `.jpg`, 6.38 MB uncompressed). Every combination measured.
+
+### Archive Size (MB)
+
+| Block \ Dict | d=64K | d=256K | d=1M | d=4M | d=16M |
+|:-------------|------:|-------:|-----:|-----:|------:|
+| **16K** | 6.12 | 6.12 | 6.12 | 6.12 | 6.12 |
+| **64K** | 6.08 | 6.08 | 6.08 | 6.08 | 6.08 |
+| **128K** | 6.07 | 6.06 | 6.06 | 6.06 | 6.06 |
+| **256K** | 6.06 | 6.01 | 6.01 | 6.01 | 6.01 |
+| **512K** | 6.05 | 5.86 | 5.83 | 5.83 | 5.83 |
+| **1M** | 6.05 | 5.81 | 5.71 | 5.71 | 5.71 |
+| **4M** | 6.05 | 5.85 | 5.67 | 5.67 | 5.67 |
+| **Solid** | 6.05 | 5.83 | 5.67 | 5.66 | **5.66** |
+
+> **Pattern**: dictionary only helps when dict ≤ block size. Beyond that, identical results (shaded same). Minimum at solid+d=16M but only 0.5 MB (7.5%) better than 16K blocks.
+
+### Best Configuration Per Block Size
+
+Optimal dictionary for each block size, with extraction latency from the large-scale benchmark:
+
+```mermaid
+xychart-beta
+    title "Archive Size (MB) — optimal dict per block size"
+    x-axis ["16K", "64K", "128K", "256K", "512K", "1M", "4M", "Solid"]
+    y-axis "Archive Size (MB)" 5.5 --> 6.2
+    bar [6.12, 6.08, 6.06, 6.01, 5.83, 5.71, 5.67, 5.66]
+```
+
+| Block | Best Dict | Size | Ratio | Extraction p50 | Verdict |
+|-------|-----------|-----:|------:|---------------:|---------|
+| 16K | d=64K | 6.12 MB | 95.9% | **0.1 ms** | ⚡ Best speed |
+| 64K | d=64K | 6.08 MB | 95.3% | **0.3 ms** | ⚡ Excellent |
+| 128K | d=256K | 6.06 MB | 95.0% | **1.3 ms** | ⚡ Great |
+| 256K | d=256K | 6.01 MB | 94.1% | 4.9 ms | ✅ Fast |
+| 512K | d=4M | 5.83 MB | 91.3% | 12.4 ms | ✅ Fast |
+| **1M** | **d=1M** | **5.71 MB** | **89.5%** | **24.8 ms** | ✅ **Sweet spot** |
+| 4M | d=4M | 5.67 MB | 88.8% | 104.5 ms | ⚠️ OK |
+| Solid | d=16M | 5.66 MB | 88.7% | 26,898 ms | 🔴 Unusable |
+
+### Compression Speed
+
+```mermaid
+xychart-beta
+    title "Compression Time (ms) vs Block Size — d=1M"
+    x-axis ["16K", "64K", "128K", "256K", "512K", "1M", "4M", "Solid"]
+    y-axis "Milliseconds" 200 --> 800
+    bar [727, 637, 617, 596, 667, 544, 548, 430]
+```
+
+| Block \ Dict | d=64K | d=256K | d=1M | d=4M | d=16M |
+|:-------------|------:|-------:|-----:|-----:|------:|
+| **16K** | 709 | 673 | 727 | 647 | 660 |
+| **64K** | 635 | 639 | 637 | 654 | 636 |
+| **128K** | 654 | 623 | 617 | 614 | 625 |
+| **256K** | 603 | 586 | 596 | 577 | 577 |
+| **512K** | 587 | 677 | 667 | 573 | 571 |
+| **1M** | 591 | 602 | 544 | 552 | 555 |
+| **4M** | 377 | 353 | 548 | 544 | 543 |
+| **Solid** | 323 | 305 | 430 | 546 | 554 |
+
+> Small dict + large blocks is fastest to compress (323ms for solid+d=64K) but produces the worst compression. Larger dicts take longer but plateau around 550ms.
+
+### The Efficiency Frontier
+
+Plotting size vs extraction speed reveals the optimal trade-off curve:
+
+```mermaid
+xychart-beta
+    title "Efficiency Frontier: Archive Size vs Extraction Latency"
+    x-axis ["0.1ms", "0.3ms", "1.3ms", "4.9ms", "12ms", "25ms", "105ms"]
+    y-axis "Archive Size (MB)" 5.6 --> 6.2
+    line [6.12, 6.08, 6.06, 6.01, 5.83, 5.71, 5.67]
+```
+
+> The curve flattens after block=1M (25ms, 5.71 MB). Going from 1M→4M saves only 0.04 MB but costs 4× in extraction speed. **block=1M with d=1M is the sweet spot** for this dataset.
+
 ### Key Takeaways
 
 - **Solid block size** is the primary control for random access speed.
   Smaller blocks = faster single-file extraction, but worse compression.
 - **Dictionary size** primarily affects compression ratio at large block sizes.
   At small blocks it has no effect on either size or speed.
+- **Dictionary saturates at block size** — d > block gives identical results.
 - Diminishing returns above d=1M for typical filesets.
+- **Sweet spot**: `block=1M, d=1M` — 89.5% ratio with 25ms extraction.
 - For archives you'll extract individual files from, prioritize block size.
 - For backup/archival with full extraction only, use solid for best ratio.
